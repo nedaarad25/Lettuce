@@ -2,8 +2,7 @@
 
 # ===========================================
 # Title: Mining fungal genome from plant genome
-# Description: Downloads SRA data, performs QC, trims reads, assembles genomes,
-#              and runs BLASTn against a custom database.
+# Description: Downloads SRA data, performs QC, trims reads, assembles genomes, and runs BLASTn against a custom database.
 # Author: Neda Arad
 # Copyright: © 2025 The University of Arizona
 # ===========================================
