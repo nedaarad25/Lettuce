@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# ===========================================
+# Title: Mining fungal genome from plant genome
+# Description: Downloads SRA data, performs QC, trims reads, assembles genomes,
+#              and runs BLASTn against a custom database.
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizona
+# ===========================================
+
+# ====== USER-DEFINED VARIABLES ======
+SRA_ID="<SRA_ID>"
+PROJECT_NAME="<PROJECT_NAME>"
+BASE_DIR="<BASE_DIR>/${PROJECT_NAME}-${SRA_ID}"
+TMP_DIR="<TEMP_DIR>"
+THREADS=16
+FASTQ_THREADS=12
+ADAPTER_FILE="<ADAPTER_FILE>"
+BLAST_DB="<BLAST_DB_NAME>"
+# ====================================
+
+# Create working directory if it doesn't exist
+mkdir -p "$BASE_DIR"
+cd "$BASE_DIR" || exit
+
+echo "[$(date)] Starting pipeline for ${SRA_ID}..."
+
+# Step 1: Download SRA data (limit to 100GB)
+echo "[$(date)] Downloading SRA data..."
+prefetch --max-size 100GB "$SRA_ID"
+
+# Step 2: Move .sra file and clean up
+echo "[$(date)] Organizing files..."
+mv "${BASE_DIR}/${SRA_ID}/${SRA_ID}.sra" "$BASE_DIR/"
+rmdir "${BASE_DIR}/${SRA_ID}"
+
+# Step 3: Convert SRA to FASTQ
+echo "[$(date)] Converting SRA to FASTQ..."
+fasterq-dump --split-files --threads "$FASTQ_THREADS" --temp "$TMP_DIR" "${BASE_DIR}/${SRA_ID}.sra"
+
+# Step 4: Compress FASTQ files
+echo "[$(date)] Compressing FASTQ files..."
+gzip "${SRA_ID}_1.fastq"
+gzip "${SRA_ID}_2.fastq"
+
+# Step 5: Run FastQC
+echo "[$(date)] Running FastQC..."
+fastqc "${SRA_ID}_1.fastq.gz" "${SRA_ID}_2.fastq.gz"
+
+# Step 6: Trim reads with Trimmomatic
+echo "[$(date)] Trimming reads..."
+trimmomatic PE -threads "$THREADS" -phred33 \
+    "${SRA_ID}_1.fastq.gz" "${SRA_ID}_2.fastq.gz" \
+    "${SRA_ID}_forward_paired.fq.gz" "${SRA_ID}_forward_unpaired.fq.gz" \
+    "${SRA_ID}_reverse_paired.fq.gz" "${SRA_ID}_reverse_unpaired.fq.gz" \
+    ILLUMINACLIP:"$ADAPTER_FILE":2:30:10 LEADING:3 TRAILING:3 \
+    SLIDINGWINDOW:4:15 MINLEN:36
+
+# Step 7: Assemble reads using MEGAHIT
+echo "[$(date)] Running assembly..."
+megahit -1 "${SRA_ID}_forward_paired.fq.gz" -2 "${SRA_ID}_reverse_paired.fq.gz" \
+    -r "${SRA_ID}_forward_unpaired.fq.gz","${SRA_ID}_reverse_unpaired.fq.gz" \
+    -o "${SRA_ID}_assembled" --num-cpu-threads "$THREADS"
+
+# Step 8: BLASTn search against fungal database
+echo "[$(date)] Running BLASTn search..."
+blastn -query "${BASE_DIR}/${SRA_ID}_assembled/final.contigs.fa" \
+       -db "$BLAST_DB" \
+       -out "${BASE_DIR}/${PROJECT_NAME}-${SRA_ID}_vs_${BLAST_DB}_blast_results.txt" \
+       -outfmt "6 qseqid stitle pident length evalue bitscore" \
+       -num_threads "$THREADS"
+
+echo "[$(date)] Pipeline completed for ${SRA_ID}."
