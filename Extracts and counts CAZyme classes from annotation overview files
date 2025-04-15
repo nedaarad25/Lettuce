@@ -1,0 +1,34 @@
+# Template Script: CAZyme Class Summary
+# Description: Extracts and counts CAZyme classes from annotation overview files (e.g., dbCAN)
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizona
+
+import pandas as pd
+
+# ---- Step 1: Define Input Files ----
+# Dictionary format: { SampleName: "path/to/overview_file.txt" }
+file_paths = {
+    "Sample1": "data/sample1_overview.txt",
+    "Sample2": "data/sample2_overview.txt",
+    "Sample3": "data/sample3_overview.txt"
+    # Add more samples as needed
+}
+
+# ---- Step 2: Process Files and Count CAZyme Classes ----
+for sample_name, filepath in file_paths.items():
+    try:
+        # Load annotation file (tab-delimited)
+        df = pd.read_csv(filepath, sep="\t")
+
+        # Extract CAZyme class prefix from 'HMMER' column (e.g., GH, GT, CE)
+        df['CAZyme_class'] = df['HMMER'].str.extract(r'([A-Z]+)')
+
+        # Count number of genes in each class
+        class_counts = df['CAZyme_class'].value_counts()
+
+        # Output result to terminal
+        print(f"\n===== {sample_name} =====")
+        print(class_counts)
+
+    except Exception as e:
+        print(f"Error processing {sample_name}: {e}")
