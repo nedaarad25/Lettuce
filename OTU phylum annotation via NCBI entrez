@@ -1,0 +1,57 @@
+# Template Script: OTU Phylum Annotation via NCBI Entrez
+# Description: Fetches taxonomy IDs and phyla for accession numbers and annotates OTUs accordingly
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizona
+
+import csv
+import time
+from Bio import Entrez
+
+# Set your email (required by NCBI Entrez API)
+Entrez.email = "your_email@example.com"  # <-- Replace with your actual email
+
+# ---- Function: Get Taxonomy ID from Accession ----
+def get_taxonomy_id(accession):
+    try:
+        handle = Entrez.esummary(db="nucleotide", id=accession, retmode="xml")
+        records = Entrez.read(handle)
+        return records[0].get("TaxId", None)
+    except Exception as e:
+        print(f"Error fetching taxonomy ID for {accession}: {e}")
+        return None
+
+# ---- Function: Get Phylum from Taxonomy ID ----
+def get_phylum_from_taxid(taxid):
+    try:
+        handle = Entrez.efetch(db="taxonomy", id=taxid, retmode="xml")
+        records = Entrez.read(handle)
+        for entry in records[0]["LineageEx"]:
+            if entry["Rank"] == "phylum":
+                return entry["ScientificName"]
+        return "Phylum not found"
+    except Exception as e:
+        print(f"Error fetching phylum for TaxId {taxid}: {e}")
+        return None
+
+# ---- Main Function: Annotate OTUs ----
+def process_otu_file(input_file, output_file):
+    with open(input_file, 'r') as infile, open(output_file, 'w', newline='') as outfile:
+        reader = csv.reader(infile, delimiter='\t')
+        writer = csv.writer(outfile, delimiter='\t')
+        writer.writerow(['OTU', 'Accession', 'Phylum'])
+
+        for row in reader:
+            if not row or row[0].startswith('#'):
+                continue  # Skip empty or comment lines
+            otu = row[0]
+            accession = row[1].split()[0]
+            taxid = get_taxonomy_id(accession)
+            phylum = get_phylum_from_taxid(taxid) if taxid else "Phylum not found"
+            writer.writerow([otu, accession, phylum])
+            time.sleep(0.5)  # Be respectful to NCBI servers
+
+# ---- Script Entry Point ----
+if __name__ == "__main__":
+    input_file = "data/otu_vs_blast_results.txt"             # <-- Replace with your input file
+    output_file = "results/otu_with_phylum_annotation.txt"   # <-- Desired output path
+    process_otu_file(input_file, output_file)
