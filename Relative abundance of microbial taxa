@@ -1,6 +1,8 @@
 # ========================================================
 # Template Script: Relative Abundance Bar Plot
 # Description: Calculates and plots relative abundances for groups and features (e.g., species & phyla)
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizona
 # ========================================================
 
 # ---- 1. Load Required Libraries ----
