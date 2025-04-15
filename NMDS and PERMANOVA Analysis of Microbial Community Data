@@ -1,0 +1,86 @@
+# =====================================================================
+# NMDS and PERMANOVA Analysis of Microbial Community Data
+# Author: Neda Arad
+# Date: Spring 2025
+# Institution: The University of Arizona
+# Description: This script performs NMDS visualization and PERMANOVA 
+#              analysis using microbial OTU data.
+# =====================================================================
+
+# ---- 1. Load Required Libraries ----
+library(vegan)
+library(readxl)
+library(ggplot2)
+library(dplyr)
+library(purrr)
+library(tidyr)
+
+# ---- 2. Data Import ----
+# Load data from Excel
+data_file <- "data.xlsx"
+sheet_name <- "Sheet1"
+df <- read_excel(data_file, sheet = sheet_name)
+
+# Rename the first column to "Group" (e.g., treatment or sample type)
+names(df)[1] <- "Group"
+
+# ---- 3. NMDS Analysis ----
+# Extract OTU matrix (assuming starts at column 3)
+otu_data <- df[, 3:ncol(df)]
+m_otu_data <- as.matrix(otu_data)
+
+# Run NMDS with Bray-Curtis distance
+set.seed(123)
+nmds <- metaMDS(m_otu_data, distance = "bray")
+
+# NMDS Stress
+cat("NMDS Stress Value:\n", nmds$stress, "\n\n")
+
+# Get NMDS site scores and merge with group info
+data.scores <- as.data.frame(scores(nmds)$sites)
+data.scores$Group <- df$Group
+
+cat("NMDS Scores:\n")
+print(data.scores)
+
+# ---- 4. Convex Hull Calculation ----
+hulls <- data.scores %>%
+  group_by(Group) %>%
+  group_modify(~ {
+    ch <- chull(.x$NMDS1, .x$NMDS2)
+    data.frame(NMDS1 = .x$NMDS1[ch], NMDS2 = .x$NMDS2[ch], Group = .x$Group[1])
+  })
+
+# ---- 5. NMDS Plotting ----
+group_colors <- setNames(rainbow(length(unique(data.scores$Group))), unique(data.scores$Group))
+
+plot1 <- ggplot() +
+  geom_polygon(data = hulls, aes(x = NMDS1, y = NMDS2, fill = Group), alpha = 0.3) +
+  geom_point(data = data.scores, aes(x = NMDS1, y = NMDS2, color = Group), size = 3) +
+  scale_fill_manual(values = group_colors) +
+  scale_color_manual(values = group_colors) +
+  theme_minimal() +
+  labs(
+    title = "NMDS of Microbial Communities",
+    x = "NMDS Axis 1", y = "NMDS Axis 2"
+  ) +
+  theme(
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12),
+    axis.title = element_text(size = 14),
+    plot.title = element_text(size = 16),
+    panel.grid = element_blank(),
+    panel.background = element_blank(),
+    axis.line = element_line(color = "black")
+  )
+
+print(plot1)
+
+# ---- 6. PERMANOVA Analysis ----
+dist_matrix <- vegdist(m_otu_data, method = "bray")
+permanova_result <- adonis2(dist_matrix ~ df$Group, permutations = 999)
+
+cat("PERMANOVA Results:\n")
+print(permanova_result)
+
+# ---- 7. End of Script ----
