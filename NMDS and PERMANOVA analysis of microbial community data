@@ -1,10 +1,9 @@
 # =====================================================================
 # NMDS and PERMANOVA Analysis of Microbial Community Data
 # Author: Neda Arad
-# Date: Spring 2025
-# Institution: The University of Arizona
 # Description: This script performs NMDS visualization and PERMANOVA 
 #              analysis using microbial OTU data.
+# Copyright: © 2025 The University of Arizona
 # =====================================================================
 
 # ---- 1. Load Required Libraries ----
