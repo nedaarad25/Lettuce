@@ -1,0 +1,18 @@
+#!/bin/bash
+# ========================================================
+# GFFread Annotation Extraction Script
+# Description: Extracts CDS and translated protein sequences from a genome using a GFF file
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizoa
+# ========================================================
+
+# ---- Input Files ----
+GENOME="data/genome.fasta"
+GFF="data/annotations.gff"
+
+# ---- Output Files ----
+CDS_OUTPUT="results/cds.fasta"
+PROTEIN_OUTPUT="results/proteins.fasta"
+
+# ---- Run gffread ----
+gffread -g "$GENOME" -y "$PROTEIN_OUTPUT" -x "$CDS_OUTPUT" "$GFF"
