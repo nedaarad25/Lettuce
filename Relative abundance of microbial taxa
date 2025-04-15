@@ -1,0 +1,51 @@
+# ========================================================
+# Template Script: Relative Abundance Bar Plot
+# Description: Calculates and plots relative abundances for groups and features (e.g., species & phyla)
+# ========================================================
+
+# ---- 1. Load Required Libraries ----
+library(readxl)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+# ---- 2. Data Import ----
+file_path <- "data/your_input_file.xlsx"  # Replace with your file path
+data <- read_excel(file_path)
+
+# ---- 3. Clean Column Names (Optional) ----
+# If columns have suffixes like "...1", remove them
+colnames(data) <- gsub("\\.\\.\\.[0-9]+", "", colnames(data))
+
+# ---- 4. Collapse Duplicate Columns ----
+data_clean <- data %>%
+  pivot_longer(cols = -Group, names_to = "Feature", values_to = "Count") %>%
+  group_by(Group, Feature) %>%
+  summarise(Count = sum(Count, na.rm = TRUE), .groups = "drop") %>%
+  pivot_wider(names_from = Feature, values_from = Count, values_fill = 0)
+
+# ---- 5. Calculate Relative Abundance ----
+long_data <- data_clean %>%
+  pivot_longer(cols = -Group, names_to = "Feature", values_to = "Count")
+
+rel_abund <- long_data %>%
+  group_by(Group, Feature) %>%
+  summarise(Abundance = sum(Count), .groups = 'drop') %>%
+  group_by(Group) %>%
+  mutate(Relative_Abundance = (Abundance / sum(Abundance)) * 100)
+
+# ---- 6. Plot Relative Abundance ----
+plot <- ggplot(rel_abund, aes(x = Group, y = Relative_Abundance, fill = Feature)) +
+  geom_bar(stat = "identity", position = "stack") +
+  ylab("Relative Abundance (%)") +
+  xlab("Group") +
+  theme_minimal()
+
+# ---- 7. Save Plot ----
+ggsave("relative_abundance_plot.png", plot = plot, width = 8, height = 6)
+
+# ---- 8. Optional: Print Mean Abundance by Feature ----
+rel_abund %>%
+  group_by(Feature) %>%
+  summarise(mean_percent = mean(Relative_Abundance)) %>%
+  arrange(desc(mean_percent))
