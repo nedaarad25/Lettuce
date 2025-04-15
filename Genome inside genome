@@ -6,6 +6,14 @@
 # Author: Neda Arad
 # Copyright: © 2025 The University of Arizona
 # ===========================================
+# The pipeline includes the following steps:
+# Download SRA data using prefetch
+# Convert .sra to FASTQ using fasterq-dump
+# Compress FASTQ files with gzip
+# Run quality control checks using FastQC
+# Trim reads using Trimmomatic
+# Assemble reads into contigs with MEGAHIT
+# Perform BLASTn search on assembled contigs against a fungal reference database
 
 # ====== USER-DEFINED VARIABLES ======
 SRA_ID="<SRA_ID>"
