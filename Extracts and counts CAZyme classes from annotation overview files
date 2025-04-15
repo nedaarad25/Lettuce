@@ -1,7 +1,9 @@
+# ========================================================
 # Template Script: CAZyme Class Summary
 # Description: Extracts and counts CAZyme classes from annotation overview files (e.g., dbCAN)
 # Author: Neda Arad
 # Copyright: © 2025 The University of Arizona
+# ========================================================
 
 import pandas as pd
 
