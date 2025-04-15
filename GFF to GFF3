@@ -1,0 +1,30 @@
+#!/bin/bash
+# ========================================================
+# GFF to GFF3 Conversion Script
+# Description: This script converts a GFF file into GFF3 format using [AGAT](https://agat.readthedocs.io/en/latest/) (`gxf2gxf`) in a reproducible conda environment.
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizona
+# ========================================================
+
+# ---- Step 1: Set Up Conda Environment ----
+# (Only needs to be done once)
+conda create -n agat-env -c bioconda -c conda-forge agat perl -y
+conda activate agat-env
+
+# ---- Step 2: Optional - Check for AGAT Script ----
+ls $CONDA_PREFIX/bin | grep gxf2gxf
+
+# ---- Step 3: Run the Conversion ----
+# Replace the filenames with your actual input/output
+INPUT_GFF="data/your_input.gff"
+OUTPUT_GFF3="results/your_output.gff3"
+
+agat_convert_sp_gxf2gxf.pl --gff "$INPUT_GFF" -o "$OUTPUT_GFF3"
+
+# ---- Step 4: Check the Output (Optional) ----
+head "$OUTPUT_GFF3"
+grep -v '^#' "$OUTPUT_GFF3" | head -n 5
+
+# ---- Optional Cleanup ----
+# conda deactivate
+# conda remove -n agat-env --all
