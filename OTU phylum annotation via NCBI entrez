@@ -1,7 +1,9 @@
+# ========================================================
 # Template Script: OTU Phylum Annotation via NCBI Entrez
 # Description: Fetches taxonomy IDs and phyla for accession numbers and annotates OTUs accordingly
 # Author: Neda Arad
 # Copyright: © 2025 The University of Arizona
+# ========================================================
 
 import csv
 import time
