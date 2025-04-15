@@ -1,6 +1,8 @@
 # ========================================================
 # Indicator Species Analysis (IndVal) for Grouped Samples
 # Description: Identifies genus-level indicator species based on a grouping variable
+# Author: Neda Arad
+# Copyright: © 2025 The University of Arizona
 # ========================================================
 
 # ---- 1. Load Required Libraries ----
