@@ -1,0 +1,35 @@
+# ========================================================
+# Indicator Species Analysis (IndVal) for Grouped Samples
+# Description: Identifies genus-level indicator species based on a grouping variable
+# ========================================================
+
+# ---- 1. Load Required Libraries ----
+library(tidyverse)
+library(readxl)        # For reading Excel files
+library(indicspecies)  # For indicator species analysis
+
+# ---- 2. Data Import ----
+# Define relative path to input file
+file_path <- "data/your_input_file.xlsx"  # Update with your actual filename
+
+# Read the Excel file
+data <- read_excel(file_path)
+
+# ---- 3. Prepare Data ----
+# Extract community matrix (e.g., genus abundance data)
+# Assumes abundance data starts from column 9
+comm_matrix <- data[, 9:ncol(data)]  # Adjust if needed
+
+# Define grouping variable (e.g., species or treatments)
+group_vector <- data$Group  # Replace 'Group' with your actual column name
+
+# ---- 4. Indicator Species Analysis ----
+# Run IndVal analysis with permutation testing
+result <- multipatt(comm_matrix, group_vector, func = "r.g", control = how(nperm = 999))
+
+# ---- 5. Results Output ----
+# Full result summary
+summary(result)
+
+# Summary with significance threshold
+summary(result, alpha = 0.1)
